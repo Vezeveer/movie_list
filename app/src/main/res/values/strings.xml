@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Movie List</string>
+    <string name="title_name">TITLE</string>
+    <string name="details_name">DETAILS</string>
+    <string name="movie_watched_label">Watched</string>
+    <string name="date_picker_title">Date of Movie:</string>
+    <string name="new_movie">New Movie</string>
+    <string name="show_subtitle">Show Subtitle</string>
+    <string name="hide_subtitle">Hide Subtitle</string>
+    <string name="subtitle_format">%1$d movies</string>
+    <string name="update_movie_list">Update</string>
+    <string name="exit_button">Exit</string>
+    <string name="about_button">About</string>
+    <string name="about_text_info">
+        This app will keep track of all the movies you have and have not watched.
+    </string>
+    <string name="movie_title_hint">Type the movie title here</string>
+    <string name="add_update_btn">ADD/UPDATE</string>
+    <string name="delete_movie">Delete</string>
+</resources>

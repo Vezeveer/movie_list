@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/new_movie"
+        android:icon="@drawable/ic_action_add"
+        android:title="@string/new_movie"
+        app:showAsAction="ifRoom|withText" />
+    <item
+        android:id="@+id/update_movie_list"
+        android:icon="@drawable/ic_action_update"
+        android:title="@string/update_movie_list"
+        app:showAsAction="ifRoom|withText" />
+
+    <item
+        android:id="@+id/show_subtitle"
+        android:title="@string/show_subtitle"
+        app:showAsAction="ifRoom"/>
+
+    <item
+        android:id="@+id/about_app"
+        android:icon="@drawable/ic_action_about"
+        android:title="@string/about_button"
+        app:showAsAction="ifRoom|withText" />
+
+    <item
+        android:id="@+id/exit_app"
+        android:icon="@drawable/ic_action_exit"
+        android:title="@string/exit_button"
+        app:showAsAction="ifRoom|withText" />
+
+</menu>
