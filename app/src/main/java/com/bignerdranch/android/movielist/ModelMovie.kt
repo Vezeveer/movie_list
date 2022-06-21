@@ -1,50 +1,41 @@
-package com.bignerdranch.android.movielist;
+package com.bignerdranch.android.movielist
 
+import java.util.*
+import kotlin.jvm.JvmOverloads
 
-import java.util.Date;
-import java.util.UUID;
-
-public class ModelMovie {
-    private UUID mId;
-    private String mTitle;
-    private Date mDate;
-    private boolean mWatched;
-
-    public ModelMovie(){
-        this(UUID.randomUUID());
+class ModelMovie @JvmOverloads constructor(private val mId: UUID = UUID.randomUUID()) {
+    private var mTitle: String? = null
+    private var mDate: Date?
+    private var mWatched = false
+    fun getmId(): UUID {
+        return mId
     }
 
-    public ModelMovie(UUID id){
-        mId = id;
-        mDate = new Date();
+    fun getmTitle(): String? {
+        return mTitle
     }
 
-    public UUID getmId() {
-        return mId;
+    fun setmTitle(mTitle: String?) {
+        this.mTitle = mTitle
     }
 
-    public String getmTitle() {
-        return mTitle;
+    fun getmDate(): Date? {
+        return mDate
     }
 
-    public void setmTitle(String mTitle) {
-        this.mTitle = mTitle;
+    fun setmDate(mDate: Date?) {
+        this.mDate = mDate
     }
 
-    public Date getmDate() {
-        return mDate;
+    fun ismWatched(): Boolean {
+        return mWatched
     }
 
-    public void setmDate(Date mDate) {
-        this.mDate = mDate;
+    fun setmWatched(mWatched: Boolean) {
+        this.mWatched = mWatched
     }
 
-    public boolean ismWatched() {
-        return mWatched;
+    init {
+        mDate = Date()
     }
-
-    public void setmWatched(boolean mWatched) {
-        this.mWatched = mWatched;
-    }
-
 }

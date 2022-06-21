@@ -1,166 +1,152 @@
-package com.bignerdranch.android.movielist;
+package com.bignerdranch.android.movielist
 
+import android.os.Bundle
+import android.content.Intent
+import android.view.LayoutInflater
+import android.app.Activity
+import android.view.ViewGroup
+import android.view.View
+import android.widget.*
+import androidx.fragment.app.Fragment
+import java.text.DateFormat
+import java.util.*
 
-import android.app.Activity;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.Toast;
-
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.UUID;
-
-public class FragmentMovie extends Fragment {
-    private ModelMovie mMovie;
-    private EditText mTitleField;
-    private static final String ARG_MOVIE_ID = "movie_id";
-    private static final String DIALOG_DATE = "DialogDate";
-
-    private static final int REQUEST_DATE = 0;
-    Button mDateButton;
-    Button mAddButton;
-    Button mDeleteButton;
-
-    public static FragmentMovie newInstance(UUID movieId){
-        Bundle args = new Bundle();
-        args.putSerializable(ARG_MOVIE_ID, movieId);
-        FragmentMovie fragment = new FragmentMovie();
-        fragment.setArguments(args);
-        return fragment;
+class FragmentMovie : Fragment() {
+    private var mMovie: ModelMovie? = null
+    private var mTitleField: EditText? = null
+    var mDateButton: Button? = null
+    var mAddButton: Button? = null
+    var mDeleteButton: Button? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val movieId = requireArguments().getSerializable(ARG_MOVIE_ID) as UUID?
+        mMovie = ControllerMovie.Companion.get(activity)!!.getMovie(movieId)
     }
 
-    public FragmentMovie(){}
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        UUID movieId = (UUID) getArguments().getSerializable(ARG_MOVIE_ID);
-        mMovie = ControllerMovie.get(getActivity()).getMovie(movieId);
+    override fun onPause() {
+        super.onPause()
+        ControllerMovie.Companion.get(activity)
+            ?.updateMovie(mMovie)
     }
 
-    @Override
-    public void onPause(){
-        super.onPause();
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val v = inflater.inflate(
+            R.layout.fragment_movie,
+            container, false
+        )
+        mTitleField = v.findViewById(R.id.edit_text_title)
+        mTitleField?.setText(mMovie!!.getmTitle())
+        mDateButton = v.findViewById(R.id.edit_text_date)
+        mAddButton = v.findViewById(R.id.btn_add_movie)
+        mDeleteButton = v.findViewById(R.id.btn_delete_movie)
+        val mCheckBox = v.findViewById<CheckBox>(R.id.checkbox_watched)
+        mCheckBox.isChecked = mMovie!!.ismWatched()
+        updateDate()
+        mDateButton?.setOnClickListener(View.OnClickListener {
+            val manager = requireActivity().supportFragmentManager
+            val dialog: FragmentDatePicker =
+                FragmentDatePicker.Companion.newInstance(mMovie!!.getmDate())
+            dialog.setTargetFragment(this@FragmentMovie, REQUEST_DATE)
+            dialog.show(manager, DIALOG_DATE)
+        })
+        mAddButton?.setOnClickListener(View.OnClickListener {
+            if(mTitleField?.text?.isEmpty() == true){
 
-        ControllerMovie.get(getActivity())
-                .updateMovie(mMovie);
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater,
-                             ViewGroup container,
-                             Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_movie,
-                container, false);
-
-        mTitleField = v.findViewById(R.id.edit_text_title);
-        mTitleField.setText(mMovie.getmTitle());
-        mDateButton = v.findViewById(R.id.edit_text_date);
-        mAddButton = v.findViewById(R.id.btn_add_movie);
-        mDeleteButton = v.findViewById(R.id.btn_delete_movie);
-        CheckBox mCheckBox = v.findViewById(R.id.checkbox_watched);
-        mCheckBox.setChecked(mMovie.ismWatched());
-
-        updateDate();
-
-        mDateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FragmentManager manager = getActivity().getSupportFragmentManager();
-                FragmentDatePicker dialog = FragmentDatePicker
-                        .newInstance(mMovie.getmDate());
-
-
-                dialog.setTargetFragment(FragmentMovie.this, REQUEST_DATE);
-
-                dialog.show(manager, DIALOG_DATE);
+            } else {
+                mMovie!!.setmTitle(mTitleField?.text.toString())
+                mMovie!!.setmWatched(mCheckBox.isChecked)
+                goToMain()
+                Toast.makeText(
+                    activity, mTitleField?.text.toString() + " - Added/updated",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        });
+        })
+        mDeleteButton?.setOnClickListener(object : View.OnClickListener {
+            var i = 0
+            var dbSize = ControllerMovie[activity]?.movies?.size
+            override fun onClick(view: View) {
 
-        mAddButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                mMovie.setmTitle(mTitleField.getText().toString());
-                mMovie.setmWatched(mCheckBox.isChecked());
-
-                goToMain();
-                Toast.makeText(getActivity(),
-                        mTitleField.getText() + " - Added/updated",
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        mDeleteButton.setOnClickListener(new View.OnClickListener() {
-            int i;
-            @Override
-            public void onClick(View view) {
-                i = ControllerMovie.get(getActivity())
-                        .deleteMovie(mMovie.getmId());
-
-                if(i>0){
-                    Toast.makeText(getActivity(),
-                            mTitleField.getText() + " - Deleted!",
-                            Toast.LENGTH_SHORT).show();
-                    goToMain();
-                }else{
-                    Toast.makeText(getActivity(),
-                            mTitleField.getText() + " - Error. Can't delete!",
-                            Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        mCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
-            @Override
-            public void onCheckedChanged(CompoundButton cb, boolean isChecked) {
-                if(isChecked){
-                    Toast.makeText(getActivity(),
-                            mTitleField.getText() + " - Watched!",
-                            Toast.LENGTH_SHORT).show();
+                if(dbSize == 0){
+                    Toast.makeText(
+                        activity, " Database is empty! Nothing to delete" + dbSize,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 } else {
-                    Toast.makeText(getActivity(),
-                            mTitleField.getText() + " - Not Watched",
-                            Toast.LENGTH_SHORT).show();
+                    if(mTitleField?.text?.isEmpty() == true){
+
+                    } else {
+                        i = ControllerMovie.Companion[activity]?.deleteMovie(mMovie!!.getmId())!!
+
+                        if (i > 0) {
+                            Toast.makeText(
+                                activity, mTitleField?.text.toString() +" - Deleted!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            goToMain()
+                        } else {
+                            Toast.makeText(
+                                activity, mTitleField?.text.toString() + " - Error. Can't delete!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
                 }
             }
-        });
-
-        return v;
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
-        if(resultCode != Activity.RESULT_OK){
-            return;
+        })
+        mCheckBox.setOnCheckedChangeListener { cb, isChecked ->
+            if (isChecked) {
+                Toast.makeText(
+                    activity, mTitleField?.text.toString() + " - Watched!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                Toast.makeText(
+                    activity, mTitleField?.text.toString() + " - Not Watched",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
+        return v
+    }
 
-        if(requestCode == REQUEST_DATE){
-            Date date = (Date) data
-                    .getSerializableExtra(FragmentDatePicker.EXTRA_DATE);
-            mMovie.setmDate(date);
-
-            updateDate();
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (resultCode != Activity.RESULT_OK) {
+            return
+        }
+        if (requestCode == REQUEST_DATE) {
+            val date = data
+                ?.getSerializableExtra(FragmentDatePicker.Companion.EXTRA_DATE) as Date?
+            mMovie!!.setmDate(date)
+            updateDate()
         }
     }
 
-
-
-    private void updateDate() {
-        mDateButton.setText(DateFormat.getDateInstance(DateFormat.LONG).format(mMovie.getmDate()));
+    private fun updateDate() {
+        mDateButton!!.text = DateFormat.getDateInstance(DateFormat.LONG).format(
+            mMovie!!.getmDate()
+        )
     }
 
-    private void goToMain(){
-        Intent intent = new Intent(getActivity(), ActivityMain.class);
-        startActivity(intent);
+    private fun goToMain() {
+        val intent = Intent(activity, ActivityMain::class.java)
+        startActivity(intent)
+    }
+
+    companion object {
+        private const val ARG_MOVIE_ID = "movie_id"
+        private const val DIALOG_DATE = "DialogDate"
+        private const val REQUEST_DATE = 0
+        fun newInstance(movieId: UUID?): FragmentMovie {
+            val args = Bundle()
+            args.putSerializable(ARG_MOVIE_ID, movieId)
+            val fragment = FragmentMovie()
+            fragment.arguments = args
+            return fragment
+        }
     }
 }

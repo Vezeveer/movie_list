@@ -1,19 +1,11 @@
-package com.bignerdranch.android.movielist;
+package com.bignerdranch.android.movielist
 
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.appcompat.app.AppCompatActivity;
-
-public class ActivityAbout extends AppCompatActivity {
-    @Override
-    public void onCreate(Bundle savedInstanceState){
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_about);
-
+class ActivityAbout : AppCompatActivity() {
+    public override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_about)
     }
-
 }

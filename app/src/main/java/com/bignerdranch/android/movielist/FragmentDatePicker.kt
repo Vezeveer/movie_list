@@ -1,82 +1,63 @@
-package com.bignerdranch.android.movielist;
+package com.bignerdranch.android.movielist
 
+import android.os.Bundle
+import android.content.Intent
+import android.widget.DatePicker
+import androidx.appcompat.app.AppCompatDialog
+import android.view.LayoutInflater
+import android.app.Activity
+import android.view.View
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import java.util.*
 
-import android.app.Activity;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.DatePicker;
-
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.DialogFragment;
-import androidx.appcompat.app.AppCompatDialog;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
-public class FragmentDatePicker extends DialogFragment {
-    public static final String EXTRA_DATE =
-            "com.bignerdranch.android.movielist.date";
-
-    private static final String ARG_DATE = "date";
-
-    private DatePicker mDatePicker;
-
-    public static FragmentDatePicker newInstance(Date date){
-        Bundle args = new Bundle();
-        args.putSerializable(ARG_DATE, date);
-
-        FragmentDatePicker fragment = new FragmentDatePicker();
-        fragment.setArguments(args);
-        return fragment;
+class FragmentDatePicker : DialogFragment() {
+    private var mDatePicker: DatePicker? = null
+    override fun onCreateDialog(savedInstanceState: Bundle?): AppCompatDialog {
+        val date = requireArguments().getSerializable(ARG_DATE) as Date?
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        val year = calendar[Calendar.YEAR]
+        val month = calendar[Calendar.MONTH]
+        val day = calendar[Calendar.DAY_OF_MONTH]
+        val v = LayoutInflater.from(activity)
+            .inflate(R.layout.dialog_date, null)
+        mDatePicker = v.findViewById<View>(R.id.dialog_date_picker) as DatePicker
+        mDatePicker!!.init(year, month, day, null)
+        return AlertDialog.Builder(requireActivity())
+            .setView(v)
+            .setTitle(R.string.date_picker_title)
+            .setPositiveButton(
+                android.R.string.ok
+            ) { dialog, which ->
+                val year = mDatePicker!!.year
+                val month = mDatePicker!!.month
+                val day = mDatePicker!!.dayOfMonth
+                val date = GregorianCalendar(year, month, day).time
+                sendResult(Activity.RESULT_OK, date)
+            }
+            .create()
     }
 
-    @Override
-    public AppCompatDialog onCreateDialog(Bundle savedInstanceState){
-        Date date = (Date) getArguments().getSerializable(ARG_DATE);
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
-
-        View v = LayoutInflater.from(getActivity())
-                .inflate(R.layout.dialog_date, null);
-
-        mDatePicker = (DatePicker) v.findViewById(R.id.dialog_date_picker);
-        mDatePicker.init(year, month, day, null);
-
-        return new AlertDialog.Builder(getActivity())
-                .setView(v)
-                .setTitle(R.string.date_picker_title)
-                .setPositiveButton(android.R.string.ok,
-                        new DialogInterface.OnClickListener(){
-                            @Override
-                            public void onClick(DialogInterface dialog, int which){
-                                int year = mDatePicker.getYear();
-                                int month = mDatePicker.getMonth();
-                                int day = mDatePicker.getDayOfMonth();
-
-                                Date date = new GregorianCalendar(year, month, day).getTime();
-                                sendResult(Activity.RESULT_OK, date);
-                            }
-                        })
-                .create();
-    }
-
-    private void sendResult(int resultCode, Date date){
-        if (getTargetFragment() == null){
-            return;
+    private fun sendResult(resultCode: Int, date: Date) {
+        if (targetFragment == null) {
+            return
         }
+        val intent = Intent()
+        intent.putExtra(EXTRA_DATE, date)
+        targetFragment!!
+            .onActivityResult(targetRequestCode, resultCode, intent)
+    }
 
-        Intent intent = new Intent();
-        intent.putExtra(EXTRA_DATE, date);
-
-        getTargetFragment()
-                .onActivityResult(getTargetRequestCode(), resultCode, intent);
+    companion object {
+        const val EXTRA_DATE = "com.bignerdranch.android.movielist.date"
+        private const val ARG_DATE = "date"
+        fun newInstance(date: Date?): FragmentDatePicker {
+            val args = Bundle()
+            args.putSerializable(ARG_DATE, date)
+            val fragment = FragmentDatePicker()
+            fragment.arguments = args
+            return fragment
+        }
     }
 }

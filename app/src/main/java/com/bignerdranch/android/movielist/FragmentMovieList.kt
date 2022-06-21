@@ -1,203 +1,175 @@
-package com.bignerdranch.android.movielist;
+package com.bignerdranch.android.movielist
 
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import android.content.Intent
+import android.view.*
+import android.widget.Toast
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
+import android.widget.TextView
+import androidx.fragment.app.Fragment
+import java.text.DateFormat
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import java.text.DateFormat;
-import java.util.List;
-
-public class FragmentMovieList extends Fragment {
-
-    private static final String SAVED_SUBTITLE_VISIBLE = "subtitle";
-
-    private RecyclerView mMovieRecyclerView;
-    private MovieAdapter mAdapter;
-    private boolean mSubtitleVisible;
-
-    @Override
-    public void onCreate(Bundle savedInstanceState){
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-
-        AppCompatActivity activity = (AppCompatActivity) getActivity();
-        activity.getSupportActionBar().setDisplayShowHomeEnabled(true);
-        activity.getSupportActionBar().setIcon(R.drawable.logo_smallest);
+class FragmentMovieList : Fragment() {
+    private var mMovieRecyclerView: RecyclerView? = null
+    private var mAdapter: MovieAdapter? = null
+    private var mSubtitleVisible = false
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+        val activity = activity as AppCompatActivity?
+        activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
+        activity.supportActionBar!!.setIcon(R.drawable.logo_smallest)
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState){
-        View view = inflater.inflate(R.layout.fragment_movie_list, container, false);
-
-        mMovieRecyclerView = view.findViewById(R.id.movie_recycler_view);
-        mMovieRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
-        if(savedInstanceState != null){
-            mSubtitleVisible = savedInstanceState.getBoolean(SAVED_SUBTITLE_VISIBLE);
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = inflater.inflate(R.layout.fragment_movie_list, container, false)
+        mMovieRecyclerView = view.findViewById(R.id.movie_recycler_view)
+        mMovieRecyclerView?.setLayoutManager(LinearLayoutManager(activity))
+        if (savedInstanceState != null) {
+            mSubtitleVisible = savedInstanceState.getBoolean(SAVED_SUBTITLE_VISIBLE)
         }
-
-        updateUI();
-
-        return view;
+        updateUI()
+        return view
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.fragment_movie_list, menu);
-
-        MenuItem subtitleItem = menu.findItem(R.id.show_subtitle);
-        if(mSubtitleVisible){
-            subtitleItem.setTitle(R.string.hide_subtitle);
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.fragment_movie_list, menu)
+        val subtitleItem = menu.findItem(R.id.show_subtitle)
+        if (mSubtitleVisible) {
+            subtitleItem.setTitle(R.string.hide_subtitle)
         } else {
-            subtitleItem.setTitle(R.string.show_subtitle);
+            subtitleItem.setTitle(R.string.show_subtitle)
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        switch (item.getItemId()){
-            case R.id.new_movie:
-                ModelMovie movie = new ModelMovie();
-                ControllerMovie.get(getActivity()).addMovie(movie);
-                Intent intent = ActivityMovieListPager.newIntent(getActivity(), movie.getmId());
-                startActivity(intent);
-                return true;
-            case R.id.show_subtitle:
-                mSubtitleVisible = !mSubtitleVisible;
-                getActivity().invalidateOptionsMenu();
-                updateSubtitle();
-                return true;
-            case R.id.update_movie_list:
-                getActivity().recreate();
-                Toast.makeText(getActivity(),
-                        "Updated!",
-                        Toast.LENGTH_SHORT).show();
-                return true;
-            case R.id.about_app:
-                Intent intentAbout = new Intent(getActivity(), ActivityAbout.class);
-                startActivity(intentAbout);
-                return true;
-            case R.id.exit_app:
-                getActivity().finish();
-                System.exit(0);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.new_movie -> {
+                val movie = ModelMovie()
+                ControllerMovie.Companion.get(activity)!!.addMovie(movie)
+                val intent: Intent =
+                    ActivityMovieListPager.Companion.newIntent(activity, movie.getmId())
+                startActivity(intent)
+                true
+            }
+            R.id.show_subtitle -> {
+                mSubtitleVisible = !mSubtitleVisible
+                requireActivity().invalidateOptionsMenu()
+                updateSubtitle()
+                true
+            }
+            R.id.update_movie_list -> {
+                requireActivity().recreate()
+                Toast.makeText(
+                    activity,
+                    "Updated!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                true
+            }
+            R.id.about_app -> {
+                val intentAbout = Intent(activity, ActivityAbout::class.java)
+                startActivity(intentAbout)
+                true
+            }
+            R.id.exit_app -> {
+                requireActivity().finish()
+                System.exit(0)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
-    @Override
-    public void onResume(){
-        super.onResume();
-        updateUI();
+    override fun onResume() {
+        super.onResume()
+        updateUI()
     }
 
-    private void updateSubtitle(){
-        ControllerMovie controllerMovie = ControllerMovie.get(getActivity());
-        int movieCount = controllerMovie.getMovies().size();
-        String subtitle = getString(R.string.subtitle_format, movieCount);
-
-        if(!mSubtitleVisible){
-            subtitle = null;
+    private fun updateSubtitle() {
+        val controllerMovie: ControllerMovie? = ControllerMovie.Companion.get(activity)
+        val movieCount = controllerMovie?.movies?.size
+        var subtitle: String? = getString(R.string.subtitle_format, movieCount)
+        if (!mSubtitleVisible) {
+            subtitle = null
         }
-
-        AppCompatActivity activity = (AppCompatActivity) getActivity();
-        activity.getSupportActionBar().setSubtitle(subtitle);
+        val activity = activity as AppCompatActivity?
+        activity!!.supportActionBar!!.setSubtitle(subtitle)
     }
 
-    private void updateUI() {
-        ControllerMovie controllerMovie = ControllerMovie.get(getActivity());
-        List<ModelMovie> movies = controllerMovie.getMovies();
-
-        if(mAdapter == null){
-            mAdapter = new MovieAdapter(movies);
-            mMovieRecyclerView.setAdapter(mAdapter);
-        }else{
-            mAdapter.setMovies(movies);
-            mAdapter.notifyDataSetChanged();
+    private fun updateUI() {
+        val controllerMovie: ControllerMovie? = ControllerMovie.Companion.get(activity)
+        val movies = controllerMovie?.movies
+        if (mAdapter == null) {
+            mAdapter = MovieAdapter(movies)
+            mMovieRecyclerView!!.adapter = mAdapter
+        } else {
+            mAdapter!!.setMovies(movies)
+            mAdapter!!.notifyDataSetChanged()
         }
-
-        updateSubtitle();
+        updateSubtitle()
     }
 
-    private class MovieHolder extends RecyclerView.ViewHolder
-            implements View.OnClickListener{
-
-        private TextView mTitleTextView;
-        private TextView mDateTextView;
-        private ModelMovie mMovie;
-
-        public MovieHolder(LayoutInflater inflater, ViewGroup parent){
-            super(inflater.inflate(R.layout.list_item_movie, parent, false));
-            itemView.setOnClickListener(this);
-
-            mTitleTextView = itemView.findViewById(R.id.movie_title);
-            mDateTextView = itemView.findViewById(R.id.movie_date);
+    private inner class MovieHolder(inflater: LayoutInflater, parent: ViewGroup?) :
+        RecyclerView.ViewHolder(inflater.inflate(R.layout.list_item_movie, parent, false)),
+        View.OnClickListener {
+        private val mTitleTextView: TextView
+        private val mDateTextView: TextView
+        private var mMovie: ModelMovie? = null
+        fun bind(movie: ModelMovie?) {
+            mMovie = movie
+            mTitleTextView.text = mMovie!!.getmTitle()
+            mDateTextView.text = DateFormat.getDateInstance(DateFormat.LONG).format(
+                mMovie!!.getmDate()
+            )
         }
 
-        public void bind(ModelMovie movie){
-            mMovie = movie;
-            mTitleTextView.setText(mMovie.getmTitle());
-            mDateTextView.setText(DateFormat.getDateInstance(DateFormat.LONG).format(mMovie.getmDate()));
+        override fun onClick(view: View) {
+            val intent: Intent =
+                ActivityMovieListPager.Companion.newIntent(activity, mMovie!!.getmId())
+            startActivity(intent)
         }
 
-        @Override
-        public void onClick(View view) {
-            Intent intent = ActivityMovieListPager.newIntent(getActivity(), mMovie.getmId());
-            startActivity(intent);
+        init {
+            itemView.setOnClickListener(this)
+            mTitleTextView = itemView.findViewById(R.id.movie_title)
+            mDateTextView = itemView.findViewById(R.id.movie_date)
         }
     }
 
-    private class MovieAdapter extends RecyclerView.Adapter<MovieHolder>{
-
-        private List<ModelMovie> mMovies;
-
-        public MovieAdapter(List<ModelMovie> movies){
-            mMovies = movies;
+    private inner class MovieAdapter(private var mMovies: List<ModelMovie?>?) :
+        RecyclerView.Adapter<MovieHolder>() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MovieHolder {
+            val layoutInflater = LayoutInflater.from(activity)
+            return MovieHolder(layoutInflater, parent)
         }
 
-        @Override
-        public MovieHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-
-            return new MovieHolder(layoutInflater, parent);
+        override fun onBindViewHolder(holder: MovieHolder, position: Int) {
+            val movie = mMovies!![position]
+            holder.bind(movie)
         }
 
-        @Override
-        public void onBindViewHolder(MovieHolder holder, int position) {
-            ModelMovie movie = mMovies.get(position);
-            holder.bind(movie);
+        override fun getItemCount(): Int {
+            return mMovies!!.size
         }
 
-        @Override
-        public int getItemCount() {
-            return mMovies.size();
-        }
-
-        public void setMovies(List<ModelMovie> movies){
-            mMovies = movies;
+        fun setMovies(movies: List<ModelMovie?>?) {
+            mMovies = movies
         }
     }
 
-    @Override
-    public void onSaveInstanceState(Bundle outState){
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(SAVED_SUBTITLE_VISIBLE, mSubtitleVisible);
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(SAVED_SUBTITLE_VISIBLE, mSubtitleVisible)
     }
 
+    companion object {
+        private const val SAVED_SUBTITLE_VISIBLE = "subtitle"
+    }
 }

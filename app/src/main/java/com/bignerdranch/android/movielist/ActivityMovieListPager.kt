@@ -1,62 +1,47 @@
-package com.bignerdranch.android.movielist;
+package com.bignerdranch.android.movielist
 
+import androidx.appcompat.app.AppCompatActivity
+import android.os.Bundle
+import androidx.fragment.app.FragmentStatePagerAdapter
+import android.content.Intent
+import android.content.Context
+import androidx.fragment.app.Fragment
+import kotlinx.android.synthetic.main.activity_movie_pager.*
+import java.util.*
 
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
+class ActivityMovieListPager : AppCompatActivity() {
+    private var mMovies: List<ModelMovie>? = null
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_movie_pager)
+        val movieId = intent
+            .getSerializableExtra(EXTRA_MOVIE_ID) as UUID?
+        mMovies = ControllerMovie[this]?.movies
+        val fragmentManager = supportFragmentManager
+        movie_view_pager.adapter = object : FragmentStatePagerAdapter(fragmentManager) {
+            override fun getItem(position: Int): Fragment {
+                val movie = mMovies!![position]
+                return FragmentMovie.newInstance(movie.getmId())
+            }
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.viewpager.widget.ViewPager;
-
-import java.util.List;
-import java.util.UUID;
-
-public class ActivityMovieListPager extends AppCompatActivity {
-
-    private static final String EXTRA_MOVIE_ID =
-            "com.bignerdranch.android.movielist.movie_id";
-    private ViewPager mViewPager;
-    private List<ModelMovie> mMovies;
-
-    public static Intent newIntent(Context packageContext, UUID movieId) {
-        Intent intent = new Intent(packageContext, ActivityMovieListPager.class);
-        intent.putExtra(EXTRA_MOVIE_ID, movieId);
-        return intent;
+            override fun getCount(): Int {
+                return mMovies!!.size
+            }
+        }
+        for (i in mMovies!!.indices) {
+            if (mMovies!![i].getmId() == movieId) {
+                movie_view_pager.currentItem = i
+                break
+            }
+        }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState){
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_movie_pager);
-
-        UUID movieId = (UUID) getIntent()
-                .getSerializableExtra(EXTRA_MOVIE_ID);
-        mViewPager = findViewById(R.id.movie_view_pager);
-
-        mMovies = ControllerMovie.get(this).getMovies();
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        mViewPager.setAdapter(new FragmentStatePagerAdapter(fragmentManager){
-            @Override
-            public Fragment getItem(int position){
-                ModelMovie movie = mMovies.get(position);
-                return FragmentMovie.newInstance(movie.getmId());
-            }
-
-            @Override
-            public int getCount(){
-                return mMovies.size();
-            }
-        });
-
-        for(int i = 0; i < mMovies.size(); i++){
-            if(mMovies.get(i).getmId().equals(movieId)){
-                mViewPager.setCurrentItem(i);
-                break;
-            }
+    companion object {
+        private const val EXTRA_MOVIE_ID = "com.bignerdranch.android.movielist.movie_id"
+        fun newIntent(packageContext: Context?, movieId: UUID?): Intent {
+            val intent = Intent(packageContext, ActivityMovieListPager::class.java)
+            intent.putExtra(EXTRA_MOVIE_ID, movieId)
+            return intent
         }
     }
 }
